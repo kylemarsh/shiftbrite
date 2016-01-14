@@ -59,9 +59,15 @@ void ShiftBrite::allOn(uint16_t red, uint16_t green, uint16_t blue) {
   show();
 }
 
-// TODO: Add Gamma correction factor?
 // TODO: Add HSV conversion?
 void ShiftBrite::setPixelRGB(uint16_t i, uint16_t red, uint16_t green, uint16_t blue) {
+  // TODO: Bounds checking
+  pixels[i].red   = gamma_correction[red];
+  pixels[i].green = gamma_correction[green];
+  pixels[i].blue  = gamma_correction[blue];
+}
+
+void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, uint16_t red, uint16_t green, uint16_t blue) {
   pixels[i].red   = red;
   pixels[i].green = green;
   pixels[i].blue  = blue;
