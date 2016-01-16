@@ -22,9 +22,9 @@ class ShiftBrite {
       begin(void),
       show(void),
       allOff(void),
-      allOn(uint16_t red, uint16_t green, uint16_t blue),
-      setPixelRGB(uint16_t i, uint16_t red, uint16_t green, uint16_t blue),
-      setPixelRGB_no_gamma(uint16_t i, uint16_t red, uint16_t green, uint16_t blue),
+      allOn(int16_t red, int16_t green, int16_t blue),
+      setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue),
+      setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue),
       unsetPixel(uint16_t i);
 
   private:
@@ -63,7 +63,7 @@ class ShiftBrite {
 
 // Gamma correction lookup table for 10 bits of PWM resolution using an
 // exponent of 2.8. Feel free to replace as desired
-const uint16_t gamma_correction[] = {
+const int16_t gamma_correction[] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
