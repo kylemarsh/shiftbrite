@@ -1,13 +1,14 @@
 /*
  *  Particle Core / Arduino library for controlling ShiftBrite LED pixels.
- *
- *  License: CC BY-SA 3.0: Creative Commons Share-alike 3.0. Feel free
- *  to use and abuse this code however you'd like. If you find it useful
- *  please attribute, and SHARE-ALIKE!
- *
  *  Created January 2016
  *  by Kyle Marsh
+ *
+ *  Defines an "rgb" type to facilitate passing around RGB color values,
+ *  a "ShiftBrite" class to send data to a chain of ShiftBrite pixels, and
+ *  a "ticker" class to encapsulate logic for changing a pixel's color over
+ *  time (can be extended with "tick functions" for any behavior)
  */
+
 #ifndef ShiftBrite_h
 #define ShiftBrite_h
 
@@ -19,6 +20,12 @@
 #include "application.h"
 #endif
 
+typedef struct {
+  int16_t red;
+  int16_t green;
+  int16_t blue;
+} rgb;
+
 class ShiftBrite {
   public:
     ShiftBrite(uint16_t num, uint8_t pin);
@@ -27,16 +34,34 @@ class ShiftBrite {
     void
       begin(void),
       show(void),
+
       allOff(void),
+      allOn(rgb color),
       allOn(int16_t red, int16_t green, int16_t blue),
+
       setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue),
+      setPixelRGB(uint16_t i, rgb color),
       setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue),
+      setPixelRGB_no_gamma(uint16_t i, rgb color),
+
       unsetPixel(uint16_t i);
 
   private:
+    // Clever bit of union/struct magic to pack the data for each ShiftBrite
+    // pixel into a 32 bit value. The first struct is the register map when the
+    // "command" bit is 0, allowing you set the three 10-bit PWM registers.
+    // The second struct is the register map when the command bit is 1, allowing
+    // you to set the current-correction registers and clock mode
     typedef union
     {
       uint32_t value;
+      struct // PWM registers and address bit
+      {
+        unsigned green:10;
+        unsigned red:10;
+        unsigned blue:10;
+        unsigned command:1;
+      };
       struct // Current control and clock mode registers
       {
         unsigned greenDotCorrect:7;
@@ -45,13 +70,6 @@ class ShiftBrite {
         unsigned redDotCorrect:7;
         unsigned :3;
         unsigned blueDotCorrect:7;
-      };
-      struct // PWM registers and address bit
-      {
-        unsigned green:10;
-        unsigned red:10;
-        unsigned blue:10;
-        unsigned command:1;
       };
     } ShiftBritePacket;
 
@@ -67,7 +85,26 @@ class ShiftBrite {
     ShiftBritePacket *pixels;
 };
 
-#if TARGET_ARDUINO == 0
+class Ticker
+{
+  public:
+    Ticker(void (*tick_func)(Ticker *t, uint16_t), int num_targets, int speed_adjust, int offset);
+    ~Ticker();
+
+    int
+      num_targets,
+      speed_adjust,
+      offset;
+    rgb current;
+    rgb *targets;
+
+    void Tick(uint16_t tick);
+
+  private:
+    void (*tick_func)(Ticker *t, uint16_t tick);
+};
+
+#if TARGET_ARDUINO == 0 // I don't have this working on arduino yet.
 // Gamma correction lookup table for 10 bits of PWM resolution using an
 // exponent of 2.8. Feel free to replace as desired
 const int16_t gamma_correction[] = {
@@ -104,5 +141,5 @@ const int16_t gamma_correction[] = {
   856, 859, 861, 864, 866, 869, 871, 874, 876, 879, 881, 884, 887, 889, 892, 894, 897, 899, 902, 905, 907, 910, 912, 915, 918, 920, 923, 925, 928, 931, 933, 936,
   939, 941, 944, 947, 949, 952, 955, 957, 960, 963, 965, 968, 971, 973, 976, 979, 982, 984, 987, 990, 992, 995, 998, 1001, 1004, 1006, 1009, 1012, 1015, 1017, 1020, 1023
 };
-#endif // comment out gamma block for now
+#endif // gamma
 #endif // ShiftBrite_h
