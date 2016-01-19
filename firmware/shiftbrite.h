@@ -1,17 +1,23 @@
 /*
- Particle Core library for controlling ShiftBrite LED pixels.
-
- License: CC BY-SA 3.0: Creative Commons Share-alike 3.0. Feel free
- to use and abuse this code however you'd like. If you find it useful
- please attribute, and SHARE-ALIKE!
-
- Created January 2016
- by Kyle Marsh
-*/
-#include "application.h"
-
+ *  Particle Core / Arduino library for controlling ShiftBrite LED pixels.
+ *
+ *  License: CC BY-SA 3.0: Creative Commons Share-alike 3.0. Feel free
+ *  to use and abuse this code however you'd like. If you find it useful
+ *  please attribute, and SHARE-ALIKE!
+ *
+ *  Created January 2016
+ *  by Kyle Marsh
+ */
 #ifndef ShiftBrite_h
 #define ShiftBrite_h
+
+#define TARGET_ARDUINO 0
+
+#if TARGET_ARDUINO
+#include <Arduino.h>
+#else
+#include "application.h"
+#endif
 
 class ShiftBrite {
   public:
@@ -61,6 +67,7 @@ class ShiftBrite {
     ShiftBritePacket *pixels;
 };
 
+#if TARGET_ARDUINO == 0
 // Gamma correction lookup table for 10 bits of PWM resolution using an
 // exponent of 2.8. Feel free to replace as desired
 const int16_t gamma_correction[] = {
@@ -97,4 +104,5 @@ const int16_t gamma_correction[] = {
   856, 859, 861, 864, 866, 869, 871, 874, 876, 879, 881, 884, 887, 889, 892, 894, 897, 899, 902, 905, 907, 910, 912, 915, 918, 920, 923, 925, 928, 931, 933, 936,
   939, 941, 944, 947, 949, 952, 955, 957, 960, 963, 965, 968, 971, 973, 976, 979, 982, 984, 987, 990, 992, 995, 998, 1001, 1004, 1006, 1009, 1012, 1015, 1017, 1020, 1023
 };
+#endif // comment out gamma block for now
 #endif // ShiftBrite_h

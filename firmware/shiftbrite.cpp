@@ -1,4 +1,7 @@
 #include "shiftbrite.h"
+#if TARGET_ARDUINO
+#include <SPI.h>
+#endif //TARGET_ARDUINO
 
 ShiftBrite::ShiftBrite(uint16_t num, uint8_t pin) :
   numLEDs(num), numBytes(num*4), latchpin(pin), pixels(NULL)
@@ -43,8 +46,13 @@ void ShiftBrite::begin(void) {
   // We will be manually controlling LI (latch) and EI (simply connect to GND)
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
+#if TARGET_ARDUINO == 1
+  SPI.setClockDivider(SPI_CLOCK_DIV4); // SPI_CLOCK_DIV puts us at 4MHz on the 16MHz arduino boards.
+  SPI.setDataMode(SPI_MODE0); // Arduino uses nonstandard SPI mode numbers.
+#else
   SPI.setClockSpeed(8, MHZ);  // Datasheet indicates max clock of 5 MHz, I think. Mine seem to work up to 8 MHz
   SPI.setDataMode(SPI_MODE1); // Data Mode is an implementation-level detail of SPI defining the particular timing of signals. A6281 uses mode 1
+#endif //TARGET_ARDUINO
 }
 
 void ShiftBrite::allOff(void) {
@@ -62,9 +70,15 @@ void ShiftBrite::allOn(int16_t red, int16_t green, int16_t blue) {
 // TODO: Add HSV conversion?
 void ShiftBrite::setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue) {
   // TODO: Bounds checking
+#if TARGET_ARDUINO
+  pixels[i].red   = red;
+  pixels[i].green = green;
+  pixels[i].blue  = blue;
+#else
   pixels[i].red   = gamma_correction[red];
   pixels[i].green = gamma_correction[green];
   pixels[i].blue  = gamma_correction[blue];
+#endif // TARGET_ARDUINO
 }
 
 void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue) {
@@ -89,10 +103,10 @@ void ShiftBrite::show(void) {
 
 void ShiftBrite::_sendPacket(ShiftBritePacket packet) {
   uint32_t data = packet.value;
-  SPI.transfer((byte)(data >> 24 & 0xFF));
-  SPI.transfer((byte)(data >> 16 & 0xFF));
-  SPI.transfer((byte)(data >>  8 & 0xFF));
-  SPI.transfer((byte)(data >>  0 & 0xFF));
+  SPI.transfer(data >> 24);
+  SPI.transfer(data >> 16);
+  SPI.transfer(data >>  8);
+  SPI.transfer(data >>  0);
 }
 
 void ShiftBrite::_latch(void) {
