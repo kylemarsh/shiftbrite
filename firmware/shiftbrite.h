@@ -12,21 +12,21 @@
 #ifndef ShiftBrite_h
 #define ShiftBrite_h
 
-#define TARGET_ARDUINO 0
-
-#if TARGET_ARDUINO
+#if defined(ARDUINO) && ARDUINO >= 100
 #include <Arduino.h>
-#else
+#elif defined(SPARK)
 #include "application.h"
 #endif
 
-typedef struct {
+typedef struct
+{
   int16_t red;
   int16_t green;
   int16_t blue;
-} rgb;
+} Rgb;
 
-class ShiftBrite {
+class ShiftBrite
+{
   public:
     ShiftBrite(uint16_t num, uint8_t pin);
     ~ShiftBrite();
@@ -36,13 +36,13 @@ class ShiftBrite {
       show(void),
 
       allOff(void),
-      allOn(rgb color),
+      allOn(Rgb color),
       allOn(int16_t red, int16_t green, int16_t blue),
 
       setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue),
-      setPixelRGB(uint16_t i, rgb color),
+      setPixelRGB(uint16_t i, Rgb color),
       setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue),
-      setPixelRGB_no_gamma(uint16_t i, rgb color),
+      setPixelRGB_no_gamma(uint16_t i, Rgb color),
 
       unsetPixel(uint16_t i);
 
@@ -95,8 +95,8 @@ class Ticker
       num_targets,
       speed_adjust,
       offset;
-    rgb current;
-    rgb *targets;
+    Rgb current;
+    Rgb *targets;
 
     void Tick(uint16_t tick);
 
@@ -104,7 +104,7 @@ class Ticker
     void (*tick_func)(Ticker *t, uint16_t tick);
 };
 
-#if TARGET_ARDUINO == 0 // I don't have this working on arduino yet.
+#if defined(SPARK) // I don't have this working on Arduino yet
 // Gamma correction lookup table for 10 bits of PWM resolution using an
 // exponent of 2.8. Feel free to replace as desired
 const int16_t gamma_correction[] = {

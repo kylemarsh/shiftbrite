@@ -1,8 +1,8 @@
 #include "shiftbrite.h"
 
-#if TARGET_ARDUINO
+#if defined(ARDUINO)
 #include <SPI.h>
-#endif //TARGET_ARDUINO
+#endif //platform-check
 
 /********************
  * ShiftBrite Class *
@@ -33,7 +33,8 @@ ShiftBrite::ShiftBrite(uint16_t num, uint8_t pin) :
   }
 }
 
-ShiftBrite::~ShiftBrite() {
+ShiftBrite::~ShiftBrite()
+{
   if (pixels) free(pixels);
   pinMode(latchpin, INPUT);
   SPI.end();
@@ -44,7 +45,8 @@ ShiftBrite::~ShiftBrite() {
  * Initialize the SPI connection and latch pin. This method should be called
  * from your firmware's setup() function.
  */
-void ShiftBrite::begin(void) {
+void ShiftBrite::begin(void)
+{
   pinMode(latchpin, OUTPUT);
   digitalWrite(latchpin, LOW);
 
@@ -68,62 +70,71 @@ void ShiftBrite::begin(void) {
   // We will be manually controlling LI (latch) and EI (simply connect to GND)
   SPI.begin();
   SPI.setBitOrder(MSBFIRST);
-#if TARGET_ARDUINO == 1
+#if defined(ARDUINO)
   SPI.setClockDivider(SPI_CLOCK_DIV4); // SPI_CLOCK_DIV puts us at 4MHz on the 16MHz arduino boards.
   SPI.setDataMode(SPI_MODE0); // Arduino uses nonstandard SPI mode numbers.
-#else
+#elif defined(SPARK)
   SPI.setClockSpeed(8, MHZ);  // Datasheet indicates max clock of 5 MHz, I think. Mine seem to work up to 8 MHz
   SPI.setDataMode(SPI_MODE1); // Data Mode is an implementation-level detail of SPI defining the particular timing of signals. A6281 uses mode 1
-#endif //TARGET_ARDUINO
+#endif //platform-check
 }
 
-void ShiftBrite::allOff(void) {
+void ShiftBrite::allOff(void)
+{
   memset(pixels, 0, numBytes); // Cheating, I know. WORKS
   show();
 }
 
-void ShiftBrite::allOn(int16_t red, int16_t green, int16_t blue) {
+void ShiftBrite::allOn(int16_t red, int16_t green, int16_t blue)
+{
   for (uint16_t i = 0; i < numLEDs; ++i) {
     setPixelRGB(i, red, green, blue);
   }
   show();
 }
 
-void ShiftBrite::allOn(rgb color) {
+void ShiftBrite::allOn(Rgb color)
+{
   allOn(color.red, color.green, color.blue);
 }
 
 // TODO: Add HSV conversion?
-void ShiftBrite::setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue) {
+void ShiftBrite::setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue)
+{
   // Limit the input to ten bits (0-1023)
   int16_t r = constrain(red,   0, 1023);
   int16_t g = constrain(green, 0, 1023);
   int16_t b = constrain(blue,  0, 1023);
-#if TARGET_ARDUINO
+#if defined(ARDUINO)
   pixels[i].red   = r;
   pixels[i].green = g;
   pixels[i].blue  = b;
-#else
+#elif defined(SPARK)
   pixels[i].red   = gamma_correction[r];
   pixels[i].green = gamma_correction[g];
   pixels[i].blue  = gamma_correction[b];
-#endif // TARGET_ARDUINO
+#endif //platform-check
 }
 
-void ShiftBrite::setPixelRGB(uint16_t i, rgb color) {
+void ShiftBrite::setPixelRGB(uint16_t i, Rgb color)
+{
   setPixelRGB(i, color.red, color.green, color.blue);
 }
 
-void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue) {
+void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue)
+{
   pixels[i].red   = constrain(red,   0, 1023);
   pixels[i].green = constrain(green, 0, 1023);
   pixels[i].blue  = constrain(blue,  0, 1023);
 }
 
-void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, rgb color) {
+void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, Rgb color)
+{
   setPixelRGB_no_gamma(i, color.red, color.green, color.blue);
 }
-void ShiftBrite::unsetPixel(uint16_t i) {
+
+void ShiftBrite::unsetPixel(uint16_t i)
+{
   setPixelRGB(i, 0, 0, 0);
 }
 
@@ -133,14 +144,16 @@ void ShiftBrite::unsetPixel(uint16_t i) {
  * Send in reverse order so pixel[0] is the "closest" shiftbrite
  * to the microcontroller.
  */
-void ShiftBrite::show(void) {
+void ShiftBrite::show(void)
+{
   for (uint16_t i = 1; i <= numLEDs; ++i) {
     _sendPacket(pixels[numLEDs-i]);
   }
   _latch();
 }
 
-void ShiftBrite::_sendPacket(ShiftBritePacket packet) {
+void ShiftBrite::_sendPacket(ShiftBritePacket packet)
+{
   uint32_t data = packet.value;
   SPI.transfer(data >> 24);
   SPI.transfer(data >> 16);
@@ -154,7 +167,8 @@ void ShiftBrite::_sendPacket(ShiftBritePacket packet) {
  * ShiftBrite pixels, moving the data from the shift registers into the
  * appropriate storage registers (generally the PWM registers)
  */
-void ShiftBrite::_latch(void) {
+void ShiftBrite::_latch(void)
+{
   digitalWrite(latchpin, HIGH);
   digitalWrite(latchpin, LOW);
 }
@@ -168,7 +182,7 @@ void ShiftBrite::_latch(void) {
  * Ticker(tick_func, num_targets, speed_adjust, offset)
  *
  * Create a Ticker object whose behavior is defined by the tick function passed
- * in. Allocates an array of rgbs on the heap for the target colors; the number
+ * in. Allocates an array of Rgbs on the heap for the target colors; the number
  * of targets required depends on tick_func, so be careful to match it to what
  * the tick function expects.
  *
@@ -177,7 +191,7 @@ void ShiftBrite::_latch(void) {
  *     bit unsigned int. The function will be called on Ticker.Tick(tick)
  *     and "tick" is intended to be used as a counter for timing and for
  *     synchronization across Tickers.
- *   num_targets: the number of rgbs the tick function expects to use as
+ *   num_targets: the number of Rgbs the tick function expects to use as
  *     "target" colors
  *   speed_adjust: a value the tick function can use to adjust its speed
  *   offset: a value the tick function can use to adjust its speed or phase
@@ -186,7 +200,7 @@ Ticker::Ticker(void (*tick_func)(Ticker *t, uint16_t tick), int num_targets, int
   num_targets(num_targets), speed_adjust(speed_adjust),
   offset(offset), targets(NULL), tick_func(tick_func)
 {
-  if ((targets = (rgb *)malloc(num_targets * 6))) {
+  if ((targets = (Rgb *)malloc(num_targets * 6))) {
     memset(targets, 0, num_targets * 6);
   }
 }
