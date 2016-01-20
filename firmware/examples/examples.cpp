@@ -1,11 +1,12 @@
-// This #include statement was automatically added by the Particle IDE.
-#include "particle_shfitbrite/shiftbrite.h"
+#include "shiftbrite/shiftbrite.h"
 
 #define RegLatchPin D0 // replace with pin you use for the latch
 #define numleds 4      // Number of LEDs in your chain
 #define numcolors 9    // Number of colors to cycle through (adjust if you change the ColorWheel array)
 
-#define ButtonPin D5
+void gamma_test1();
+void gamma_test2();
+void train_test(bool train);
 
 uint16_t ColorWheel[numcolors][3] = {
   {   0,    0,    0}, // Off
@@ -21,20 +22,19 @@ uint16_t ColorWheel[numcolors][3] = {
 
 ShiftBrite sb(numleds, RegLatchPin);
 
+// Change this to see different test patterns! If you want to get fancy, attach
+// a button and use that to cycle through them!
 int mode = 0;
 int pos = 0;
 
-void setup() {
-  // Set an interrupt on a button to cycle through the example modes.
-  // This may or may not actually work yet.
-  pinMode(ButtonPin, INPUT_PULLUP);
-  attachInterrupt(ButtonPin, next_mode, FALLING);
-
+void setup()
+{
   sb.begin();
   sb.show();
 }
 
-void loop() {
+void loop()
+{
   switch(mode) {
     case 0:
       train_test(0);
@@ -54,7 +54,8 @@ void loop() {
   }
 }
 
-void gamma_test1() {
+void gamma_test1()
+{
   // Illustrate the difference between a pixel at 50% brightness
   // with gamma currection and without gamma correction
   // Assumes 4 pixels
@@ -66,7 +67,8 @@ void gamma_test1() {
   delay(500);
 }
 
-void gamma_test2() {
+void gamma_test2()
+{
   // Set each pixel to half the brightness of its predecessor
   // Assumes 4 pixels
   sb.setPixelRGB(0, 1023, 1023, 1023);
@@ -77,7 +79,8 @@ void gamma_test2() {
   delay(500);
 }
 
-void train_test(bool train) {
+void train_test(bool train)
+{
   // cycle through the colorwheel defined at the top of this file
   // if "train" is true, each subsequent pixel is a step ahead of the previous
   // otherwise all pixels are the same color
@@ -89,8 +92,4 @@ void train_test(bool train) {
   sb.show();
   pos = (pos + 1) % numcolors;
   delay(500);
-}
-
-void next_mode(void) {
-  mode = (mode + 1) % 4;
 }

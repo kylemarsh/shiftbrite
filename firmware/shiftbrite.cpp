@@ -93,11 +93,6 @@ void ShiftBrite::allOn(int16_t red, int16_t green, int16_t blue)
   show();
 }
 
-void ShiftBrite::allOn(Rgb color)
-{
-  allOn(color.red, color.green, color.blue);
-}
-
 // TODO: Add HSV conversion?
 void ShiftBrite::setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue)
 {
@@ -116,21 +111,11 @@ void ShiftBrite::setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blu
 #endif //platform-check
 }
 
-void ShiftBrite::setPixelRGB(uint16_t i, Rgb color)
-{
-  setPixelRGB(i, color.red, color.green, color.blue);
-}
-
 void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue)
 {
   pixels[i].red   = constrain(red,   0, 1023);
   pixels[i].green = constrain(green, 0, 1023);
   pixels[i].blue  = constrain(blue,  0, 1023);
-}
-
-void ShiftBrite::setPixelRGB_no_gamma(uint16_t i, Rgb color)
-{
-  setPixelRGB_no_gamma(i, color.red, color.green, color.blue);
 }
 
 void ShiftBrite::unsetPixel(uint16_t i)
@@ -173,51 +158,3 @@ void ShiftBrite::_latch(void)
   digitalWrite(latchpin, LOW);
 }
 
-/****************
- * Ticker Class *
- ****************/
-
-/*
- * Constructor:
- * Ticker(tick_func, num_targets, speed_adjust, offset)
- *
- * Create a Ticker object whose behavior is defined by the tick function passed
- * in. Allocates an array of Rgbs on the heap for the target colors; the number
- * of targets required depends on tick_func, so be careful to match it to what
- * the tick function expects.
- *
- * INPUTS:
- *   tick_func: a pointer to a function that takes a Ticker object and a 16
- *     bit unsigned int. The function will be called on Ticker.Tick(tick)
- *     and "tick" is intended to be used as a counter for timing and for
- *     synchronization across Tickers.
- *   num_targets: the number of Rgbs the tick function expects to use as
- *     "target" colors
- *   speed_adjust: a value the tick function can use to adjust its speed
- *   offset: a value the tick function can use to adjust its speed or phase
- */
-Ticker::Ticker(void (*tick_func)(Ticker *t, uint16_t tick), int num_targets, int speed_adjust, int offset) :
-  num_targets(num_targets), speed_adjust(speed_adjust),
-  offset(offset), targets(NULL), tick_func(tick_func)
-{
-  if ((targets = (Rgb *)malloc(num_targets * 6))) {
-    memset(targets, 0, num_targets * 6);
-  }
-}
-
-Ticker::~Ticker()
-{
-  if (targets) free(targets);
-}
-
-/*
- * Ticker.Tick(tick)
- * Calls the tick function and passes a pointer to the Ticker object as well as
- * the "tick" counter.
- *
- * You'll most likely want to call Tick from your firmware's loop() function
- */
-void Ticker::Tick(uint16_t tick)
-{
-  this->tick_func(this, tick);
-}

@@ -3,10 +3,8 @@
  *  Created January 2016
  *  by Kyle Marsh
  *
- *  Defines an "rgb" type to facilitate passing around RGB color values,
- *  a "ShiftBrite" class to send data to a chain of ShiftBrite pixels, and
- *  a "ticker" class to encapsulate logic for changing a pixel's color over
- *  time (can be extended with "tick functions" for any behavior)
+ *  Defines a "ShiftBrite" class to send data to a chain of ShiftBrite pixels
+ *  from a Particle or Arduino board.
  */
 
 #ifndef ShiftBrite_h
@@ -17,13 +15,6 @@
 #elif defined(SPARK)
 #include "application.h"
 #endif
-
-typedef struct
-{
-  int16_t red;
-  int16_t green;
-  int16_t blue;
-} Rgb;
 
 class ShiftBrite
 {
@@ -36,13 +27,10 @@ class ShiftBrite
       show(void),
 
       allOff(void),
-      allOn(Rgb color),
       allOn(int16_t red, int16_t green, int16_t blue),
 
       setPixelRGB(uint16_t i, int16_t red, int16_t green, int16_t blue),
-      setPixelRGB(uint16_t i, Rgb color),
       setPixelRGB_no_gamma(uint16_t i, int16_t red, int16_t green, int16_t blue),
-      setPixelRGB_no_gamma(uint16_t i, Rgb color),
 
       unsetPixel(uint16_t i);
 
@@ -83,25 +71,6 @@ class ShiftBrite
 
     uint8_t latchpin;
     ShiftBritePacket *pixels;
-};
-
-class Ticker
-{
-  public:
-    Ticker(void (*tick_func)(Ticker *t, uint16_t), int num_targets, int speed_adjust, int offset);
-    ~Ticker();
-
-    int
-      num_targets,
-      speed_adjust,
-      offset;
-    Rgb current;
-    Rgb *targets;
-
-    void Tick(uint16_t tick);
-
-  private:
-    void (*tick_func)(Ticker *t, uint16_t tick);
 };
 
 #if defined(SPARK) // I don't have this working on Arduino yet
