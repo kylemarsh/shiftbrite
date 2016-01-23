@@ -8,7 +8,7 @@ void gamma_test1();
 void gamma_test2();
 void train_test(bool train);
 
-uint16_t ColorWheel[numcolors][3] = {
+int16_t ColorWheel[numcolors][3] = {
   {   0,    0,    0}, // Off
   {1023,    0,    0}, // Red
   {   0, 1023,    0}, // Green
@@ -81,12 +81,12 @@ void gamma_test2()
 
 void train_test(bool train)
 {
-  // cycle through the colorwheel defined at the top of this file
+  // cycle through the color sequence defined at the top of this file
   // if "train" is true, each subsequent pixel is a step ahead of the previous
   // otherwise all pixels are the same color
   for (int i = 0; i < numleds; ++i) {
     int x = train ? i : 0;
-    uint16_t *color = ColorWheel[(pos + x) % numcolors];
+    int16_t *color = ColorWheel[(pos + x) % numcolors];
     sb.setPixelRGB(i, color[0], color[1], color[2]);
   }
   sb.show();
