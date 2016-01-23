@@ -3,5 +3,5 @@
   "author": "Kyle Marsh <spark@quixoticflame.net>",
   "license": "MIT",
   "version": "0.0.10",
-  "description": "Control ShiftBrites from a particle core"
+  "description": "Control ShiftBrites from a Particle or Arduino board"
 }
