@@ -1,10 +1,15 @@
 # shiftbrite
 Library for driving a chain of ShiftBrite LED pixels from Particle and Arduino
-boards
+boards. ShiftBrites are LED Pixels based on the Allegro A6281 PWM driver with
+10-bit PWM resolution. Datasheet for the Allegro A6281 can be found
+[here][https://www.pololu.com/file/download/allegroA6281.pdf?file_id=0J225].
+This library abstracts communication with a ShiftBrite chain of arbitrary
+length into a simple object-oriented interface.
+
 
 ## Basic Usage
 
-To get started using the shiftbrite driver, import the library and intantiate
+To get started using the shiftbrite driver, import the library and instantiate
 an object:
 
 ```cpp
@@ -18,6 +23,22 @@ ShiftBrite sb = ShiftBrite(NUM_PIXELS, LATCH_PIN);
 The ShiftBrite constructor takes 2 arguments:
  - the number of ShiftBrite pixels in this chain
  - which pin to use as the "latch" pin. This can be any available pin.
+
+We're using the particle's SPI bus which puts the clock (SCK) on pin A3 and
+data output (MOSI) on pin A5. We control when data gets "saved" to the
+ShiftBrites with the latch pin you specified in the constructor. ShiftBrites
+have the following pinout:
+ - `DI` _Data In_: Data received from upstream. Connect this to pin A5 (MOSI) on
+   your particle device, or DO on the previous ShiftBrite.
+ - `LI` _Latch In_: Pulsed from low to high to save your new color data into the
+   PWM registers and show the new color. Connect this to your latch pin on your
+   particle device or to LO upstream.
+ - `EI` _Enable In_: Hold this low to turn the LEDs on this ShiftBrite on. Hold
+   high to turn them off. This is passed down the chain from EO to EI just like
+   the other values. You probably just want to chain these like all the other
+   lines and connect the first ShiftBrite's EI to ground.
+ - `CI` _Clock In_: Clock signal received from upstream. Connect this to pin A3
+   (SCK) on your particle device, or to CO upstream.
 
 Once you've constructed the object at the global scope you need to initialize
 the hardware in your `setup()` function:
@@ -47,8 +68,9 @@ Colors are passed as three 16-bit integers<sup>*</sup>
 
 
 <sup>*</sup>The ShiftBrite's driver board has a 10-bit PWM register for each
-color channel, so you should only pass values from 0 to 1023. The data type
-for the color values is int16_t so you can use negative numbers in your math.
+color channel, so you should only pass values from 0 to 1023. The data type --
+int16_t -- for the color values is signed so you can use negative numbers in
+your math.
 
 ## Available Interface
 
@@ -82,7 +104,9 @@ microcontroller.
 ### `allOff()`
 
 Write zeroes to every color channel on every pixel in the chain. This turns
-every pixel off entirely at the same time. Calls `show()` for you.
+every pixel off entirely at the same time. Calls `show()` for you. (You could
+accomplish the same thing by pulling EI on your chain high if you don't have
+that connected directly to ground).
 
 ### `allOn(int16_t red, int16_t green, int16_t blue)`
 

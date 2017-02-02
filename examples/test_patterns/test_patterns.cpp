@@ -1,4 +1,4 @@
-#include "shiftbrite/shiftbrite.h"
+#include "shiftbrite.h"
 
 #define RegLatchPin D0 // replace with pin you use for the latch
 #define numleds 4      // Number of LEDs in your chain
